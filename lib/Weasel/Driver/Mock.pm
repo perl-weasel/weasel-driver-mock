@@ -68,16 +68,38 @@ A state is a hash where its keys have the following meaning:
 
 =over
 
-=item cmd
+=item cmd (required)
 
-=item args
+The name of the function called (e.g. 'find', 'find_all' or 'get').
 
-=item ret (or ret_array)
+=item args (optional)
 
-=item err
+The expected list of arguments passed to the called function. When not
+provided, the arguments of the call are not validated.
 
-=item content (or content_base64 or content_from_file)
+Note that this list excludes any file handles passed in.
 
+=item ret (or ret_array) (optional)
+
+Specifies the value to be returned from the called function, or,
+in case of C<ret_array>, the values to be returned.
+
+=item err (optional)
+
+When a state specifies an C<err> key, the called function (if it is
+the correct one) die with the value as the argument to C<die>.
+
+=item content (or content_base64 or content_from_file) (optional)
+
+Provides the content to be written to the file handle when the called
+function accepts a file handle argument.
+
+The string provided as value of C<content> will be printed to the handle.
+The string provided as the value of C<content_base64> will be passed to
+C<MIME::Base64::decode>. The decoded content is then written to the handle.
+The string provided as the value of C<content_from_file> is taken as a file
+name. The content of the file will be copied into the file handle using
+C<File::Copy::cp>.
 
 =back
 
@@ -409,8 +431,13 @@ sub _check_state {
     croak "Mismatch between expected ($expect->{cmd}) and actual ($cmd) driver command"
         if $expect->{cmd} ne $cmd;
 
-    croak "Mismatch between expected and actual command arguments; expected:\n" . Dumper($expect->{args}) . "\ngot:\n" Dumper($args)
-        if ! $cmp->Cmp($expect->{args}, $args);
+    if ($expect->{args}) {
+        if (! $cmp->Cmp($expect->{args}, $args)) {
+            croak("Mismatch between expected and actual command arguments;"
+                  . " expected:\n" . Dumper($expect->{args})
+                  . "\ngot:\n" Dumper($args))
+        }
+    }
 
     if ($fh) {
         if (defined $expect->{content}) { # empty string is false but defined
