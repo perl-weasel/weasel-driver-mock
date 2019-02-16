@@ -124,7 +124,7 @@ use Carp;
 use Data::Compare;
 use Data::Dumper;
 use English qw(-no_match_vars);
-use File::Copy "cp";
+use File::Copy 'cp';
 use Time::HiRes;
 use Weasel::DriverRole;
 
@@ -187,7 +187,7 @@ sub start {
 sub stop {
     my $self = shift;
 
-    carp "Web driver has states left while stop() called"
+    carp 'Web driver has states left while stop() called'
         if scalar @{$self->_remaining_states};
 
     return $self->started(0);
@@ -421,8 +421,7 @@ sub set_window_size {
 my $cmp = Data::Compare->new;
 
 sub _check_state {
-    my $self = shift;
-    my ($cmd, $args, $fh) = @_;
+    my ($self, $cmd, $args, $fh) = @_;
 
     croak "States exhausted while '$cmd' called"
         if ! @{$self->_remaining_states};
@@ -433,7 +432,7 @@ sub _check_state {
 
     if ($expect->{args}) {
         if (! $cmp->Cmp($expect->{args}, $args)) {
-            croak("Mismatch between expected and actual command arguments;"
+            croak('Mismatch between expected and actual command arguments;'
                   . " expected:\n" . Dumper($expect->{args})
                   . "\ngot:\n" . Dumper($args))
         }
@@ -441,19 +440,19 @@ sub _check_state {
 
     if ($fh) {
         if (defined $expect->{content}) { # empty string is false but defined
-            print $fh $expect->{content}
-                or croak "Can't write provided content to file handle for command $cmd: $!";
+            print ${fh} $expect->{content}
+                or croak "Can't write provided content to file handle for command $cmd: $ERRNO";
         }
         elsif ($expect->{content_from_file}) {
             cp $expect->{content_from_file}, $fh
-                or die "Can't copy $expect->{content_from_file} into file handle for command $cmd: $!";
+                or croak "Can't copy $expect->{content_from_file} into file handle for command $cmd: $ERRNO";
         }
         elsif ($expect->{content_base64}) {
-            print $fh MIME::Base64::decode($expect->{content_base64})
-                or croak "Can't write provided base64 content to file handle for command $cmd: $!";
+            print ${fh} MIME::Base64::decode($expect->{content_base64})
+                or croak "Can't write provided base64 content to file handle for command $cmd: $ERRNO";
         }
         else {
-            croak "Output handle provided, but one of content/content_from_file/content_base64 missing";
+            croak 'Output handle provided, but one of content/content_from_file/content_base64 missing';
         }
     }
     elsif ($expect->{content} or $expect->{content_from_file}
@@ -461,7 +460,7 @@ sub _check_state {
         croak "Content provided for command $cmd, but output handle missing";
     }
 
-    die $expect->{err} if $expect->{err};
+    croak $expect->{err} if $expect->{err};
 
     return @{$expect->{ret_array}} if $expect->{ret_array};
     return $expect->{ret};
