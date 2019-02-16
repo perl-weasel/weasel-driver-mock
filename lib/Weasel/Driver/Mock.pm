@@ -435,7 +435,7 @@ sub _check_state {
         if (! $cmp->Cmp($expect->{args}, $args)) {
             croak("Mismatch between expected and actual command arguments;"
                   . " expected:\n" . Dumper($expect->{args})
-                  . "\ngot:\n" Dumper($args))
+                  . "\ngot:\n" . Dumper($args))
         }
     }
 
