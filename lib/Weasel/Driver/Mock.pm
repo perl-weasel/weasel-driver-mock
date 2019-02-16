@@ -98,8 +98,7 @@ The string provided as value of C<content> will be printed to the handle.
 The string provided as the value of C<content_base64> will be passed to
 C<MIME::Base64::decode>. The decoded content is then written to the handle.
 The string provided as the value of C<content_from_file> is taken as a file
-name. The content of the file will be copied into the file handle using
-C<File::Copy::cp>.
+name.
 
 =back
 
@@ -124,7 +123,6 @@ use Carp;
 use Data::Compare;
 use Data::Dumper;
 use English qw(-no_match_vars);
-use File::Copy 'cp';
 use Time::HiRes;
 use Weasel::DriverRole;
 
@@ -420,6 +418,54 @@ sub set_window_size {
 
 my $cmp = Data::Compare->new;
 
+sub _copy_file {
+    my ($src, $tgt) = @_;
+
+    my ($src_h, $tgt_h, $close_src, $close_tgt);
+
+    if (ref $src) {
+        $src_h = $src;
+    }
+    else {
+        open my $sh, '<', $src
+            or croak "Can't open file $src for copying: $ERRNO";
+        $src_h = $sh;
+        $close_src = 1;
+    }
+    binmode $src_h;
+
+    if (ref $tgt) {
+        $tgt_h = $tgt;
+    }
+    else {
+        open my $th, '<', $tgt
+            or croak "Can't open file $tgt for copying: $ERRNO";
+        $tgt_h = $th;
+        $close_tgt = 1;
+    }
+    binmode $tgt_h;
+
+    my $buf = '';
+    my $size = 1024;
+    while (1) {
+        my ($r, $w, $t);
+        defined($r = sysread $src_h, $buf, $size)
+            or croak "Failed to read from source file: $ERRNO";
+        last unless $r;
+        for ($w = 0; $w < $r; $w += $t) {
+            $t = syswrite $tgt_h, $buf, $r - $w, $w
+                or croak "Failed to write to target file: $ERRNO";
+        }
+    }
+    close($tgt_h) || carp "Failed to close target file handle: $ERRNO"
+        if $close_tgt;
+    close($src_h) || carp "Failed to close source file handle: $ERRNO"
+        if $close_src;
+
+    return 1;
+}
+
+
 sub _check_state {
     my ($self, $cmd, $args, $fh) = @_;
 
@@ -444,7 +490,7 @@ sub _check_state {
                 or croak "Can't write provided content to file handle for command $cmd: $ERRNO";
         }
         elsif ($expect->{content_from_file}) {
-            cp $expect->{content_from_file}, $fh
+            _copy_file $expect->{content_from_file}, $fh
                 or croak "Can't copy $expect->{content_from_file} into file handle for command $cmd: $ERRNO";
         }
         elsif ($expect->{content_base64}) {

@@ -30,6 +30,9 @@ allow = for if until while
 [Documentation::RequirePodSections]
 lib_sections = NAME | VERSION | SYNOPSIS | DESCRIPTION | DEPENDENCIES | SUBROUTINES/METHODS | AUTHOR | BUGS AND LIMITATIONS | SOURCE | LICENSE AND COPYRIGHT
 
+[-InputOutput::RequireBriefOpen]
+# Brief open doesn't work for _copy_file()
+
 [Modules::ProhibitEvilModules]
 modules = Carp::Always Data::Printer
 
@@ -52,6 +55,8 @@ severity = 1
 
 [TestingAndDebugging::RequireUseWarnings]
 severity = 1
+
+[-ValuesAndExpressions::ProhibitEmptyQuotes]
 
 #--------------------------------------------------------------
 # For all other Policies, I accept the default severity,
