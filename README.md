@@ -3,6 +3,8 @@
 
 Weasel::Driver::Mock
 
+[![Build Status](https://travis-ci.org/perl-weasel/weasel-driver-mock.svg?branch=master)](https://travis-ci.org/perl-weasel/weasel-driver-mock)
+
 # VERSION
 
 0.01
