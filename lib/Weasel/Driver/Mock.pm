@@ -89,7 +89,11 @@ in case of C<ret_array>, the values to be returned.
 When a state specifies an C<err> key, the called function (if it is
 the correct one) die with the value as the argument to C<die>.
 
-=item content (or content_base64 or content_from_file) (optional)
+=item content (optional)
+
+=item content_base64 (optional)
+
+=item content_from_file (optional)
 
 Provides the content to be written to the file handle when the called
 function accepts a file handle argument.
