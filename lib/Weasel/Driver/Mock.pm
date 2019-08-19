@@ -5,7 +5,7 @@ Weasel::Driver::Mock - Weasel driver for testing purposes
 
 =head1 VERSION
 
-0.01
+0.02
 
 =head1 SYNOPSIS
 
@@ -129,7 +129,7 @@ use Weasel::DriverRole;
 use Moose;
 with 'Weasel::DriverRole';
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 =head1 ATTRIBUTES
@@ -158,7 +158,7 @@ see L<Weasel::DriverRole>.
 =cut
 
 sub implements {
-    return '0.02';
+    return '0.03';
 }
 
 
@@ -222,12 +222,23 @@ sub wait_for {
     # Do NOT use Selenium::Waiter, it eats all exceptions!
     my $end = time() + $args{retry_timeout};
     my $rv;
-    do {
+    while (1) {
         $rv = $callback->();
         return $rv if $rv;
 
-        sleep $args{poll_delay};
-    } while (time() <= $end);
+        if (time() <= $end) {
+            sleep $args{poll_delay};
+        }
+        elsif ($args{on_timeout}) {
+            $args{on_timeout}->();
+        }
+        else {
+            croak "wait_for deadline expired waiting for: $args{description}"
+                if defined $args{description};
+
+            croak 'wait_for deadline expired; consider increasing the deadline';
+        }
+    }
 
     return;
 }
