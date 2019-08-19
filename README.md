@@ -7,7 +7,7 @@ Weasel::Driver::Mock
 
 # VERSION
 
-0.01
+0.02
 
 # SYNOPSIS
 
